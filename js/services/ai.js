@@ -44,7 +44,7 @@ PL.services.ai = (function () {
       cuidados: (p.cuidados || []).slice(0, 5),
       resumen: p.resumen || "",
       fuente, detalleFuente: detalle,
-      aviso: DISCLAIMER
+      aviso: fuente === "ia" ? DISCLAIMER : "Información general de referencia. No reemplaza al veterinario."
     };
   }
 
