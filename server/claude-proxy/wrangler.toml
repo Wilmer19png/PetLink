@@ -1,0 +1,12 @@
+name = "petlink-ia"
+main = "src/index.js"
+compatibility_date = "2026-09-01"
+compatibility_flags = ["nodejs_compat"]
+
+[vars]
+# Orígenes que pueden llamar al proxy (separados por coma).
+# Cambia "wilmer19png" si tu usuario de GitHub es otro.
+ALLOWED_ORIGINS = "https://wilmer19png.github.io,http://localhost:5500,http://127.0.0.1:5500"
+
+# La clave NO va aquí. Se configura como secreto:
+#   npx wrangler secret put ANTHROPIC_API_KEY

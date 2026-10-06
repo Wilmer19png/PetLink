@@ -1,0 +1,17 @@
+{
+  "name": "petlink-claude-proxy",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Proxy de PetLink para generar perfiles de raza con la API de Claude sin exponer la clave en el navegador.",
+  "type": "module",
+  "scripts": {
+    "dev": "wrangler dev",
+    "deploy": "wrangler deploy"
+  },
+  "dependencies": {
+    "@anthropic-ai/sdk": "latest"
+  },
+  "devDependencies": {
+    "wrangler": "^4.0.0"
+  }
+}

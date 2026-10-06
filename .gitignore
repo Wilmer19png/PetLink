@@ -4,9 +4,9 @@ PetLink_Entrega_Momento1 (1).docx
 
 # Configuración local con claves (nunca se sube)
 js/config.local.js
-server/.dev.vars
-server/node_modules/
-server/.wrangler/
+.dev.vars
+node_modules/
+.wrangler/
 
 # Sistema / editores
 .DS_Store
