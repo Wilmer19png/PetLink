@@ -68,7 +68,7 @@ PL.seed = (function () {
     const pet = row => db.insert("pets", Object.assign({ creado: now, foto: "" }, row));
     pet({ id: "p_luna", nombre: "Luna", especie: "perro", raza: "Labrador", razaKey: "labrador", nacimiento: "2021-05", sexo: "hembra", peso: 28, codigo: "LUNA-7K2-QX9", estado: "activa", duenoId: "u_camila", creadaPor: "u_ana" });
     pet({ id: "p_milo", nombre: "Milo", especie: "gato", raza: "Criollo / Mestizo", razaKey: "", nacimiento: "2023-02", sexo: "macho", peso: 4.2, codigo: "MILO-9PD-2RA", estado: "activa", duenoId: "u_camila", creadaPor: "u_camila" });
-    pet({ id: "p_rocky", nombre: "Rocky", especie: "perro", raza: "Bulldog English", razaKey: "bulldog/english", nacimiento: "2024-08", sexo: "macho", peso: 18, codigo: "ROCKY-H4T-8MZ", estado: "pendiente_reclamo", duenoId: null, creadaPor: "u_ana" });
+    pet({ id: "p_rocky", nombre: "Rocky", especie: "perro", raza: "English Bulldog", razaKey: "bulldog/english", nacimiento: "2024-08", sexo: "macho", peso: 18, codigo: "ROCKY-H4T-8MZ", estado: "pendiente_reclamo", duenoId: null, creadaPor: "u_ana" });
     pet({ id: "p_nala", nombre: "Nala", especie: "gato", raza: "Siamese", razaKey: "Siamese", nacimiento: "2020-11", sexo: "hembra", peso: 3.8, codigo: "NALA-5WX-K7C", estado: "activa", duenoId: "u_laura", creadaPor: "u_ana" });
     pet({ id: "p_max", nombre: "Max", especie: "perro", raza: "Beagle", razaKey: "beagle", nacimiento: "2019-03", sexo: "macho", peso: 12.5, codigo: "MAX-3QJ-6VN", estado: "activa", duenoId: "u_laura", creadaPor: "u_laura" });
 
