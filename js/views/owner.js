@@ -10,7 +10,7 @@
     const cls = d.estado === "vencida" ? "danger" : d.estado === "cumplida" ? "" : highlight ? "hl" : "";
     const when = d.estado === "vencida" ? "Vencida · " + U.fmtDate(d.fecha, false) : d.estado === "cumplida" ? "Cumplida · " + U.fmtDate(d.cumplidaEl || d.fecha, false) : U.relDays(d.fecha) + " · " + U.fmtDate(d.fecha, false);
     return `
-      <a class="card ${cls}" href="#/calendario?fecha=${d.fecha}">
+      <a class="card ${cls}" href="${PL.session.user && PL.session.user.rol === "veterinario" ? "#/mascotas/" + d.mascotaId + "/agenda" : "#/calendario?fecha=" + d.fecha}">
         <div class="card-title">${esc(d.titulo)} · ${esc(d.mascota)}</div>
         <div class="card-sub">${esc(when)}</div>
       </a>`;
