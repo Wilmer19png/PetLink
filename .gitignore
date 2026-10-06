@@ -1,0 +1,14 @@
+# Copia original del documento (la versión versionada está en docs/)
+PetLink_Entrega_Momento1 (1).docx
+~$*.docx
+
+# Configuración local con claves (nunca se sube)
+js/config.local.js
+server/.dev.vars
+server/node_modules/
+server/.wrangler/
+
+# Sistema / editores
+.DS_Store
+Thumbs.db
+.vscode/
