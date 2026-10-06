@@ -40,8 +40,9 @@
         <p class="center" style="margin:18px 0">¿No tienes cuenta? <a href="#/registro">Regístrate</a></p>
         <div class="card dashed demo-users">
           <strong>Usuarios de prueba</strong>
-          <div class="stack" style="margin-top:6px">
-            ${DEMO.map(([label, email, pass]) => `<div>${esc(label)}: <button type="button" data-email="${esc(email)}" data-pass="${esc(pass)}">${esc(email)}</button></div>`).join("")}
+          <div class="muted" style="margin-top:2px">Toca un usuario para entrar directamente.</div>
+          <div class="stack" style="margin-top:8px">
+            ${DEMO.map(([label, email, pass]) => `<div><strong>${esc(label)}</strong><br><button type="button" data-email="${esc(email)}" data-pass="${esc(pass)}">${esc(email)}</button> · contraseña: <code>${esc(pass)}</code></div>`).join("")}
           </div>
         </div>`,
       onMount(main) {
