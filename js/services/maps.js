@@ -31,13 +31,24 @@ PL.services.maps = (function () {
     const key = lat.toFixed(3) + "," + lng.toFixed(3) + "," + r;
     if (osmCache[key]) return osmCache[key];
     const query = `[out:json][timeout:20];nwr["amenity"="veterinary"](around:${r},${lat},${lng});out center 60;`;
-    const res = await fetch(PL.config.maps.overpassUrl, {
-      method: "POST",
-      headers: { "Content-Type": "application/x-www-form-urlencoded" },
-      body: "data=" + encodeURIComponent(query)
-    });
-    if (!res.ok) throw new Error("Overpass respondió " + res.status);
-    const json = await res.json();
+    let json = null;
+    let lastError = null;
+    // Si el servidor principal falla o está saturado, se intenta con el espejo.
+    for (const url of PL.config.maps.overpassUrls) {
+      try {
+        const res = await fetch(url, {
+          method: "POST",
+          headers: { "Content-Type": "application/x-www-form-urlencoded" },
+          body: "data=" + encodeURIComponent(query)
+        });
+        if (!res.ok) throw new Error("Overpass respondió " + res.status);
+        json = await res.json();
+        break;
+      } catch (err) {
+        lastError = err;
+      }
+    }
+    if (!json) throw lastError || new Error("Overpass no disponible");
     const items = (json.elements || []).map(el => {
       const t = el.tags || {};
       const plat = el.lat != null ? el.lat : el.center && el.center.lat;
@@ -89,6 +100,9 @@ PL.services.maps = (function () {
     if (!window.L) throw new Error("No se pudo cargar la librería de mapas (Leaflet)");
     const map = L.map(el, { zoomControl: true, attributionControl: true }).setView([center.lat, center.lng], zoom || 14);
     L.tileLayer(PL.config.maps.tileUrl, { maxZoom: 19, attribution: PL.config.maps.attribution }).addTo(map);
+    // Leaflet calcula el tamaño al crearse; se recalcula cuando la pantalla ya está pintada.
+    requestAnimationFrame(() => map.invalidateSize());
+    setTimeout(() => map.invalidateSize(), 300);
     return map;
   }
   function pin(kind) {

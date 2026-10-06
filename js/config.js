@@ -29,8 +29,12 @@ PL.config = {
     // Mapas base de OpenStreetMap mostrados con Leaflet (sin clave).
     tileUrl: "https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png",
     attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>',
-    // Overpass API: veterinarias reales registradas en OpenStreetMap.
-    overpassUrl: "https://overpass-api.de/api/interpreter",
+    // Overpass API: veterinarias reales registradas en OpenStreetMap
+    // (servidor principal y espejo de respaldo).
+    overpassUrls: [
+      "https://overpass-api.de/api/interpreter",
+      "https://maps.mail.ru/osm/tools/overpass/api/interpreter"
+    ],
     searchRadiusM: 4000
   },
 
