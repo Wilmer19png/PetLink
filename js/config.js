@@ -26,7 +26,15 @@ PL.config = {
   defaultLocation: { lat: 6.2442, lng: -75.5812, label: "Medellín" },
 
   maps: {
-    // Mapas base de OpenStreetMap mostrados con Leaflet (sin clave).
+    // Google Maps + Google Places (requiere clave; ver README, sección "Google Maps").
+    // Si está vacía o Google falla, la app usa OpenStreetMap automáticamente.
+    // Esta clave sí puede ir en la app: se protege restringiéndola al dominio
+    // del sitio en Google Cloud Console.
+    googleMapsKey: "",
+    // "DEMO_MAP_ID" es el ID de prueba de Google; se puede cambiar por uno propio.
+    googleMapId: "DEMO_MAP_ID",
+
+    // Respaldo: mapas base de OpenStreetMap mostrados con Leaflet (sin clave).
     tileUrl: "https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png",
     attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>',
     // Overpass API: veterinarias reales registradas en OpenStreetMap

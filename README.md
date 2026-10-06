@@ -80,7 +80,7 @@ index.html  ──►  js/views/*        Pantallas por rol (cliente)
 
 | Servicio | Para qué | Implementación | Estado |
 |---|---|---|---|
-| Mapas y geolocalización | Veterinarios cercanos, filtro a domicilio, distancias (RF-21 a 23) | **Leaflet + OpenStreetMap**, **Overpass API** (veterinarias reales de OSM, con servidor espejo de respaldo) y **Geolocation API** | ✅ Conectado, sin clave |
+| Mapas y geolocalización | Veterinarios cercanos, filtro a domicilio, distancias (RF-21 a 23) | **Google Maps JavaScript API** + **Google Places API (New)** si hay clave. Respaldo automático: **Leaflet + OpenStreetMap** y **Overpass API**. **Geolocation API** en ambos casos | ✅ OpenStreetMap conectado sin clave · ⚙️ Google listo, falta la clave |
 | Catálogo de razas | Lista normalizada de razas al registrar una mascota (RF-04, RF-19) | **Dog CEO API** (perros, con fotos) y **catfact.ninja** (gatos). The Dog/Cat API opcional con clave | ✅ Conectado, sin clave |
 | Modelo de lenguaje (IA) | Perfil informativo de la raza con aviso (RF-19, RNF-11) | **API de Claude** a través de `server/claude-proxy` (Cloudflare Worker) | ⚙️ Listo para desplegar; mientras tanto usa una base local y lo indica |
 | Códigos QR | Generar y leer el código de la mascota (RF-07, RF-08) | **QR Server API** (crear y leer QR) | ✅ Conectado, sin clave |
@@ -90,6 +90,21 @@ index.html  ──►  js/views/*        Pantallas por rol (cliente)
 | Imágenes de gatos | Foto de referencia en el perfil de raza | **The Cat API** (`images/search`, sin clave) | ✅ Conectado |
 
 La configuración de todos los servicios está en [`js/config.js`](js/config.js). Las claves privadas van en `js/config.local.js`, que no se sube al repositorio.
+
+### Activar Google Maps
+
+Sin clave, el mapa usa OpenStreetMap. Con clave, usa Google Maps para el mapa y Google Places para encontrar las veterinarias cercanas. Si la clave falla, la app vuelve sola a OpenStreetMap.
+
+1. Entra a https://console.cloud.google.com y crea un proyecto (por ejemplo, `PetLink`).
+2. En **Facturación**, vincula una cuenta de facturación. Google pide una tarjeta, pero el uso de un proyecto académico queda dentro de la cuota gratuita mensual.
+3. En **APIs y servicios → Biblioteca**, habilita **Maps JavaScript API** y **Places API (New)**.
+4. En **APIs y servicios → Credenciales → Crear credenciales → Clave de API**, copia la clave.
+5. Edita la clave y restríngela:
+   - **Restricciones de aplicación → Sitios web:** `https://wilmer19png.github.io/*` y, para pruebas locales, `http://localhost:5500/*` y `http://127.0.0.1:5500/*`.
+   - **Restricciones de API:** solo *Maps JavaScript API* y *Places API (New)*.
+6. Pon la clave en `js/config.js`, en `googleMapsKey: "..."`, y sube el cambio.
+
+A diferencia de la clave de Claude, la de Google Maps sí puede ir en la app: Google la diseñó para el navegador y la protección es la restricción por dominio del paso 5.
 
 ### Activar la IA con Claude
 
