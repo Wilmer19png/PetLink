@@ -1,0 +1,13 @@
+{
+  "name": "PetLink",
+  "short_name": "PetLink",
+  "description": "Historial de salud compartido entre veterinarios y dueños de mascotas.",
+  "start_url": "./index.html",
+  "display": "standalone",
+  "background_color": "#ffffff",
+  "theme_color": "#1F6F75",
+  "lang": "es",
+  "icons": [
+    { "src": "assets/icon.svg", "sizes": "any", "type": "image/svg+xml", "purpose": "any" }
+  ]
+}

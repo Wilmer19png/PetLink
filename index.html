@@ -1,0 +1,61 @@
+<!doctype html>
+<html lang="es">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <meta name="theme-color" content="#1F6F75">
+  <meta name="description" content="PetLink: historial de salud compartido entre veterinarios y dueños de mascotas.">
+  <title>PetLink</title>
+  <link rel="manifest" href="manifest.webmanifest">
+  <link rel="icon" href="assets/icon.svg" type="image/svg+xml">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Nunito+Sans:wght@400;600;700;800&display=swap" rel="stylesheet">
+  <!-- Leaflet (mapa con OpenStreetMap) -->
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.css">
+  <link rel="stylesheet" href="css/styles.css">
+</head>
+<body>
+  <div id="app" class="app" aria-live="polite">
+    <div class="boot">Cargando PetLink…</div>
+  </div>
+  <div id="toast" class="toast" role="status" hidden></div>
+  <div id="sheet-root"></div>
+
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.js"></script>
+
+  <!-- Configuración -->
+  <script src="js/config.js"></script>
+
+  <!-- Núcleo -->
+  <script src="js/core/utils.js"></script>
+  <script src="js/core/ui.js"></script>
+  <script src="js/core/router.js"></script>
+
+  <!-- Arquitectura: capa de datos y backend (API REST simulada) -->
+  <script src="js/backend/db.js"></script>
+  <script src="js/backend/seed.js"></script>
+  <script src="js/backend/server.js"></script>
+  <script src="js/core/http.js"></script>
+
+  <!-- Servicios externos -->
+  <script src="js/services/breeds.js"></script>
+  <script src="js/services/ai.js"></script>
+  <script src="js/services/qr.js"></script>
+  <script src="js/services/maps.js"></script>
+  <script src="js/services/messaging.js"></script>
+  <script src="js/services/notifications.js"></script>
+
+  <!-- Pantallas -->
+  <script src="js/views/auth.js"></script>
+  <script src="js/views/vet.js"></script>
+  <script src="js/views/owner.js"></script>
+  <script src="js/views/pet.js"></script>
+  <script src="js/views/calendar.js"></script>
+  <script src="js/views/map.js"></script>
+  <script src="js/views/learn.js"></script>
+  <script src="js/views/admin.js"></script>
+
+  <script src="js/app.js"></script>
+</body>
+</html>
