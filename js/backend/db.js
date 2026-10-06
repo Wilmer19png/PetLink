@@ -7,7 +7,7 @@
    Tablas según el modelo de datos conceptual (figura 5).
    ========================================================= */
 PL.db = (function () {
-  const KEY = "petlink_db_v1";
+  const KEY = () => PL.config.dbKey || "petlink_db_v1";
   const TABLES = [
     "users", "sessions", "vetProfiles", "pets", "invites", "accesses",
     "records", "recordVersions", "notes", "careDates", "achievements",
@@ -16,7 +16,7 @@ PL.db = (function () {
   let data = null;
 
   function load() {
-    data = PL.utils.store.get(KEY, null);
+    data = PL.utils.store.get(KEY(), null);
     if (!data || !data.users) {
       data = {};
       TABLES.forEach(t => (data[t] = []));
@@ -27,7 +27,7 @@ PL.db = (function () {
   }
 
   function save() {
-    PL.utils.store.set(KEY, data);
+    PL.utils.store.set(KEY(), data);
   }
 
   function table(name) {
@@ -67,7 +67,7 @@ PL.db = (function () {
   }
 
   function reset() {
-    PL.utils.store.remove(KEY);
+    PL.utils.store.remove(KEY());
     data = null;
     load();
   }
