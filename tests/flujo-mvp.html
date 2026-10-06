@@ -1,0 +1,164 @@
+<!doctype html>
+<html lang="es">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>PetLink · Pruebas del flujo MVP</title>
+  <style>
+    :root { --ok: #2e7d4f; --bad: #b03a2e; --ink: #2e2e2e; --page: #ffffff; }
+    @media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) { --ok: #6fcf97; --bad: #ff8a80; --ink: #eaeaea; --page: #1b1d1f; } }
+    body { font-family: system-ui, sans-serif; margin: 0; padding: 24px 16px; background: var(--page); color: var(--ink); }
+    main { max-width: 820px; margin: 0 auto; }
+    li { margin: 6px 0; }
+    .ok { color: var(--ok); } .bad { color: var(--bad); font-weight: 700; }
+    #summary { font-size: 20px; font-weight: 800; }
+  </style>
+</head>
+<body>
+<main>
+  <h1>PetLink · Pruebas del flujo mínimo del MVP</h1>
+  <p>Recorre la sección 9.5 del documento contra la API (backend simulado) usando una base de datos de prueba separada.</p>
+  <p id="summary">Ejecutando…</p>
+  <ol id="out"></ol>
+</main>
+
+<script src="../js/config.js"></script>
+<script>
+  PL.config.dbKey = "petlink_test_db";
+  PL.config.simulatedLatencyMs = [0, 0];
+</script>
+<script src="../js/core/utils.js"></script>
+<script src="../js/core/ui.js"></script>
+<script src="../js/backend/db.js"></script>
+<script src="../js/backend/seed.js"></script>
+<script src="../js/backend/server.js"></script>
+<script src="../js/core/http.js"></script>
+<script src="../js/services/breeds.js"></script>
+<script src="../js/services/ai.js"></script>
+<script>
+(async function () {
+  const out = document.getElementById("out");
+  let pass = 0, failCount = 0;
+  const log = (ok, text) => {
+    const li = document.createElement("li");
+    li.className = ok ? "ok" : "bad";
+    li.textContent = (ok ? "✔ " : "✘ ") + text;
+    out.appendChild(li);
+    ok ? pass++ : failCount++;
+  };
+  const check = (cond, text) => log(!!cond, text);
+  const expectError = async (fn, status, text) => {
+    try { await fn(); log(false, text + " (no falló)"); }
+    catch (e) { log(e.status === status, text + " → " + e.status + " " + e.message); }
+  };
+  const as = async (email, password) => {
+    const r = await PL.http.post("/auth/login", { email, password });
+    PL.session.token = r.token; PL.session.user = r.user;
+    return r.user;
+  };
+
+  try {
+    PL.db.reset();
+    await PL.seed.run();
+    const U = PL.utils;
+
+    // Paso 1: el veterinario crea la mascota durante la consulta.
+    await as("ana@petlink.co", "vet123");
+    const created = await PL.http.post("/pets", { nombre: "Toby", especie: "perro", raza: "Beagle", razaKey: "beagle", nacimiento: "2025-01", sexo: "macho", peso: "9,5", duenoNombre: "Pedro Ruiz", duenoContacto: "pedro@correo.com" });
+    check(created.pet.estado === "pendiente_reclamo", "1. Dra. Ana crea a Toby (queda pendiente de reclamo)");
+    check(created.invite && created.invite.token, "   Se genera la invitación para el dueño");
+    check(created.pet.peso === 9.5, "   El peso '9,5' se guarda como 9.5");
+
+    // Paso 2: el dueño acepta y queda como titular.
+    const inv = await PL.http.get("/invites/" + created.invite.token);
+    check(inv.mascota.nombre === "Toby" && inv.veterinario.nombre === "Dra. Ana Gómez", "2. La invitación muestra la mascota y quién la creó");
+    const reg = await PL.http.post("/auth/register", { nombre: "Pedro Ruiz", email: "pedro@correo.com", password: "pedro123", rol: "dueno" });
+    PL.session.token = reg.token; PL.session.user = reg.user;
+    const claimed = await PL.http.post("/invites/" + created.invite.token + "/accept");
+    check(claimed.dueno && claimed.dueno.nombre === "Pedro Ruiz" && claimed.estado === "activa", "   Pedro acepta y queda como titular");
+    await expectError(() => PL.http.post("/invites/" + created.invite.token + "/accept"), 409, "   La invitación no se puede usar dos veces");
+
+    // Paso 3: el veterinario registra la consulta y una vacuna con su próxima dosis.
+    await as("ana@petlink.co", "vet123");
+    const next = U.addDays(U.today(), 3);
+    await PL.http.post("/pets/" + created.pet.id + "/records", { tipo: "consulta", fecha: U.today(), motivo: "Control general", diagnostico: "Sano" });
+    const vac = await PL.http.post("/pets/" + created.pet.id + "/records", { tipo: "vacuna", fecha: U.today(), producto: "Antirrábica", proximaFecha: next });
+    check(vac.autor === "Dra. Ana Gómez", "3. Dra. Ana registra consulta y vacuna (con autor)");
+
+    // Paso 4: el dueño ve el historial y el calendario y recibe un recordatorio.
+    await as("pedro@correo.com", "pedro123");
+    const hist = await PL.http.get("/pets/" + created.pet.id + "/records");
+    check(hist.length === 2, "4. Pedro ve el historial (2 registros)");
+    const cal = await PL.http.get("/calendar");
+    check(cal.some(c => c.fecha === next && c.estado === "pendiente"), "   El calendario tiene la próxima dosis generada automáticamente");
+    const inbox = await PL.http.get("/me/inbox");
+    check(inbox.some(n => n.tipo === "registro"), "   Pedro recibió notificación del nuevo registro");
+    await expectError(() => PL.http.post("/pets/" + created.pet.id + "/records", { tipo: "consulta", fecha: U.today(), motivo: "x" }), 403, "   El dueño NO puede escribir datos clínicos");
+    const note = await PL.http.post("/pets/" + created.pet.id + "/notes", { texto: "Rasca la oreja", peso: "9,8" });
+    check(note.peso === 9.8, "   El dueño agrega una nota con peso (separada de lo clínico)");
+
+    // Paso 5: el dueño autoriza a un segundo veterinario con el código.
+    await as("luis@petlink.co", "vet123");
+    await expectError(() => PL.http.get("/pets/" + created.pet.id + "/records"), 403, "5. Dr. Luis NO ve el historial sin autorización");
+    const req = await PL.http.post("/access/request", { codigo: created.pet.codigo.toLowerCase() });
+    check(req.access.estado === "pendiente", "   Dr. Luis vincula con el código (solicitud pendiente)");
+    await as("pedro@correo.com", "pedro123");
+    const accesses = await PL.http.get("/pets/" + created.pet.id + "/access");
+    const luisAcc = accesses.find(a => a.veterinario.nombre === "Dr. Luis Mora");
+    await PL.http.post("/pets/" + created.pet.id + "/access/" + luisAcc.id + "/approve");
+    check(true, "   Pedro autoriza al Dr. Luis");
+
+    // Paso 6: el segundo veterinario ve el historial previo y continúa el caso.
+    await as("luis@petlink.co", "vet123");
+    const hist2 = await PL.http.get("/pets/" + created.pet.id + "/records");
+    check(hist2.length === 2, "6. Dr. Luis ve el historial previo");
+    const notes2 = await PL.http.get("/pets/" + created.pet.id + "/notes");
+    check(notes2.length === 1, "   Dr. Luis ve las notas del dueño");
+    const edited = await PL.http.patch("/records/" + hist2[0].id, { diagnostico: "Sano, leve otitis", baseVersion: hist2[0].version });
+    check(edited.version === 2 && edited.versiones === 1, "   Dr. Luis modifica un registro y se conserva la versión anterior");
+    await expectError(() => PL.http.patch("/records/" + hist2[0].id, { diagnostico: "otro", baseVersion: 1 }), 409, "   Una edición sobre una versión vieja no sobrescribe en silencio");
+    const vac2 = await PL.http.post("/pets/" + created.pet.id + "/records", { tipo: "vacuna", fecha: U.today(), producto: "Antirrábica" });
+    check(vac2.autor === "Dr. Luis Mora", "   Dr. Luis continúa el caso con un nuevo registro");
+
+    // Gamificación: la vacuna aplicada a tiempo cumple la fecha pendiente.
+    await as("pedro@correo.com", "pedro123");
+    const cal2 = await PL.http.get("/calendar?petId=" + created.pet.id);
+    check(cal2.find(c => c.fecha === next).estado === "cumplida", "   La fecha de la vacuna queda cumplida");
+    const ach = await PL.http.get("/me/achievements");
+    check(ach.racha === 1 && ach.logros.find(l => l.tipo === "a_tiempo_1").obtenido, "   Pedro gana racha 1 y el logro 'Al día'");
+
+    // Flujo alterno: acceso retirado.
+    await PL.http.post("/pets/" + created.pet.id + "/access/" + luisAcc.id + "/revoke");
+    await as("luis@petlink.co", "vet123");
+    await expectError(() => PL.http.get("/pets/" + created.pet.id + "/records"), 403, "Alterno: al retirar el acceso, Dr. Luis deja de ver el historial de inmediato");
+
+    // Flujo alterno: veterinario sin verificar.
+    await as("andres@petlink.co", "vet123");
+    await expectError(() => PL.http.post("/access/request", { codigo: "LUNA-7K2-QX9" }), 403, "Alterno: un veterinario sin verificar no accede a datos clínicos");
+    await as("admin@petlink.co", "admin123");
+    await PL.http.post("/admin/vets/u_andres/verify", { decision: "aprobar" });
+    await as("andres@petlink.co", "vet123");
+    const r2 = await PL.http.post("/access/request", { codigo: "LUNA-7K2-QX9" });
+    check(r2.access.estado === "pendiente", "Alterno: tras la verificación del admin, ya puede solicitar acceso");
+
+    // Datos de demostración del wireframe.
+    await as("camila@petlink.co", "dueno123");
+    const pets = await PL.http.get("/pets");
+    check(pets.map(p => p.nombre).sort().join(",") === "Luna,Milo", "Demo: Camila ve a Luna y Milo");
+    const profile = await PL.http.get("/breed-profile?especie=perro&raza=Labrador&razaKey=labrador");
+    check(profile.aviso && profile.energia && profile.predisposiciones.length, "Demo: perfil de raza con aviso (" + profile.fuente + ")");
+
+    // Sesión inválida.
+    PL.session.token = "token-falso";
+    await expectError(() => PL.http.get("/me"), 401, "Seguridad: un token inválido es rechazado");
+  } catch (e) {
+    log(false, "Error inesperado: " + (e.stack || e.message));
+  }
+
+  try { localStorage.removeItem("petlink_test_db"); localStorage.removeItem("pl_read_cache"); } catch (e) { /* ignorar */ }
+  document.getElementById("summary").textContent = failCount ? `${failCount} prueba(s) fallaron · ${pass} pasaron` : `Todas las pruebas pasaron (${pass})`;
+  document.title = "DONE " + pass + "/" + (pass + failCount);
+})();
+</script>
+</body>
+</html>
